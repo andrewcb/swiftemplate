@@ -78,6 +78,9 @@ class TemplateLineTests: XCTestCase {
             let tl2 = try TemplateLine(line:" %% template foo(v1:String, v2:[Int])")
             XCTAssertEqual(tl2, TemplateLine.TemplateStart(spec:"foo(v1:String, v2:[Int])"))
             
+            let tl2a = try TemplateLine(line:"%% endtemplate")
+            XCTAssertEqual(tl2a, TemplateLine.TemplateEnd)
+            
             let tl3 = try TemplateLine(line:"%% for i in items")
             XCTAssertEqual(tl3, TemplateLine.ForStart(variable:"i", iterable:"items"))
             

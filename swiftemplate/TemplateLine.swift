@@ -76,6 +76,7 @@ extension String {
     }
 }
 
+/* A line from the file, as read at parsing time. This is not to be confused with the internal representation of a template. */
 enum TemplateLine: Equatable {
     enum Error: ErrorType {
         case InvalidDirective(line: String)
@@ -83,10 +84,11 @@ enum TemplateLine: Equatable {
     
     case Text(text: String)
     case TemplateStart(spec: String)
+    case TemplateEnd
     case ForStart(variable: String, iterable: String)
     case ForEnd
     case IfStart(expression: String)
-    case IfElif(expression: String)
+    case IfElif(expression: String) 
     case IfElse    
     case IfEnd
     
@@ -112,6 +114,7 @@ enum TemplateLine: Equatable {
                 }
             case "endfor": self = ForEnd
             case "template": self = TemplateStart(spec: rest)
+            case "endtemplate": self = TemplateEnd
                 
             default: 
                 throw Error.InvalidDirective(line: rest)
@@ -126,6 +129,7 @@ func ==(lhs: TemplateLine, rhs:TemplateLine) -> Bool {
     switch(lhs, rhs) {
     case (.Text(let ltext), .Text(let rtext)): return (ltext == rtext)
     case (.TemplateStart(let lspec), .TemplateStart(let rspec)): return (lspec == rspec)
+    case (.TemplateEnd, .TemplateEnd): return true
     case (.ForStart(let lv, let li), .ForStart(let rv, let ri)): return (lv==rv) && (li==ri)
     case (.ForEnd, .ForEnd): return true
     case (.IfStart(let lexp), .IfStart(let rexp)): return (lexp == rexp)
