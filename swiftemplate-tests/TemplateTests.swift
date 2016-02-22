@@ -20,6 +20,30 @@ class TemplateTests: XCTestCase {
         super.tearDown()
     }
 
+    // ---------------
+    
+    func testSimplifyTemplateElements() {
+        let input = [
+            TemplateElement.Literal(text:"<h1>Heading</h1>"),
+            TemplateElement.Literal(text:"<p>this is some text</p>"),
+            TemplateElement.Literal(text:"<ul>"),
+            TemplateElement.Code(code:"for i in items {"),
+            TemplateElement.Literal(text:"<li>\\(i)</li>"),
+            TemplateElement.Code(code:"}"),
+            TemplateElement.Literal(text:"<br/>")
+        ]
+        let desiredOutput = [
+            TemplateElement.Literal(text:"<h1>Heading</h1>\n<p>this is some text</p>\n<ul>"),
+            TemplateElement.Code(code:"for i in items {"),
+            TemplateElement.Literal(text:"<li>\\(i)</li>"),
+            TemplateElement.Code(code:"}"),
+            TemplateElement.Literal(text:"<br/>")
+        ]
+        XCTAssertEqual(simplifyTemplateElements(input), desiredOutput)
+    }
+    
+    // ---------------
+    
     func testTemplateElementAsCode() {
         
         XCTAssertEqual(TemplateElement.Literal(text:"abcd").asCode, "r.append(\"abcd\")")

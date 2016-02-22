@@ -50,6 +50,28 @@ func ==(lhs: TemplateElement, rhs: TemplateElement) -> Bool {
     }
 }
 
+func simplifyTemplateElements<S: SequenceType where S.Generator.Element == TemplateElement>(input: S) -> [TemplateElement] {
+    // amalgamate any adjacent .Literals, to reduce the number of lines of code in the generated function
+    var literalsSeen = [String]()
+    var result = [TemplateElement]()
+    
+    for elem in input {
+        if case let TemplateElement.Literal(text) = elem {
+            literalsSeen.append(text)
+        } else {
+            if !literalsSeen.isEmpty {
+                result.append(TemplateElement.Literal(text:literalsSeen.joinWithSeparator("\n")))
+                literalsSeen.removeAll()
+            }
+            result.append(elem)
+        }
+    }
+    if !literalsSeen.isEmpty {
+        result.append(TemplateElement.Literal(text:literalsSeen.joinWithSeparator("\n")))
+    }
+    return result
+}
+
 struct Template {
     /** the name and arguments of the template */
     let spec: String

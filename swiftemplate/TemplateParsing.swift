@@ -187,6 +187,6 @@ func parseTemplate<S: SequenceType where S.Generator.Element == String>(input: S
         l = g.next()
     }
     
-    return Template(spec: spec, elements: elements)
+    return Template(spec: spec, elements: simplifyTemplateElements(elements))
 }
 
