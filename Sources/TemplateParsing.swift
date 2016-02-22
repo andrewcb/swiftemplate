@@ -41,11 +41,11 @@ extension String {
     
     // these return optionals because, this not being Python, we can.
     var lstrip: String? {
-        return self.firstIndexMatching{ !$0.isspace }.map { self.substringFromIndex($0) }
+        return self.firstIndexMatching{ !$0.isspace }.map { self[$0..<self.endIndex] }
     }
     
     var rstrip: String? {
-        return self.lastIndexNotMatching { !$0.isspace }.map { self.substringToIndex($0) }
+        return self.lastIndexNotMatching { !$0.isspace }.map { self[self.startIndex..<$0] }
     }
     
     var strip: String? {
@@ -57,9 +57,9 @@ extension String {
     var textAfterEscape: String? {
         guard let firstNonSpace = (self.firstIndexMatching { !$0.isspace }) else { return nil }
         
-        if self.substringFromIndex(firstNonSpace).hasPrefix("%%") {
+        if self[firstNonSpace..<self.endIndex].hasPrefix("%%") {
             let afterEsc = self.firstIndexMatching({!$0.isspace}, from:firstNonSpace.advancedBy(2))
-            return afterEsc.flatMap { self.substringFromIndex($0).rstrip }
+            return afterEsc.flatMap { self[$0..<self.endIndex].rstrip }
         }
         return nil
     }
@@ -72,7 +72,7 @@ extension String {
         let firstWordEndIndex = (self.firstIndexMatching({$0.isspace}, from:firstWordStartIndex)) ?? self.characters.endIndex
         let restStartIndex = (self.firstIndexMatching({!$0.isspace}, from:firstWordEndIndex)) ?? self.characters.endIndex
 
-        return (self.substringWithRange(firstWordStartIndex..<firstWordEndIndex), self.substringFromIndex(restStartIndex))
+        return (self[firstWordStartIndex..<firstWordEndIndex], self[restStartIndex..<self.endIndex])
     }
 }
 
