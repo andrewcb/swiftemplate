@@ -7,14 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		44A7914A1C77827A002BC2EC /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A791491C77827A002BC2EC /* main.swift */; };
-		44A791511C778334002BC2EC /* TemplateParsing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A791501C778334002BC2EC /* TemplateParsing.swift */; };
-		44A791591C7788C7002BC2EC /* swiftemplate_tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A791581C7788C7002BC2EC /* swiftemplate_tests.swift */; };
-		44A7915F1C77EF3B002BC2EC /* TemplateParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A7915E1C77EF3B002BC2EC /* TemplateParsingTests.swift */; };
-		44A791601C77EF3E002BC2EC /* TemplateParsing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A791501C778334002BC2EC /* TemplateParsing.swift */; };
-		44A791621C7A1A24002BC2EC /* Template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A791611C7A1A24002BC2EC /* Template.swift */; };
-		44A791631C7A1A27002BC2EC /* Template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A791611C7A1A24002BC2EC /* Template.swift */; };
-		44A791651C7A84F1002BC2EC /* TemplateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A791641C7A84F1002BC2EC /* TemplateTests.swift */; };
+		44A791691C7B66C4002BC2EC /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A791661C7B66C4002BC2EC /* main.swift */; };
+		44A7916A1C7B66C4002BC2EC /* Template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A791671C7B66C4002BC2EC /* Template.swift */; };
+		44A7916B1C7B66C4002BC2EC /* TemplateParsing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A791681C7B66C4002BC2EC /* TemplateParsing.swift */; };
+		44A791701C7B66F8002BC2EC /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 44A7916C1C7B66F8002BC2EC /* Info.plist */; };
+		44A791711C7B66F8002BC2EC /* swiftemplate_tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A7916D1C7B66F8002BC2EC /* swiftemplate_tests.swift */; };
+		44A791721C7B66F8002BC2EC /* TemplateParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A7916E1C7B66F8002BC2EC /* TemplateParsingTests.swift */; };
+		44A791731C7B66F8002BC2EC /* TemplateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A7916F1C7B66F8002BC2EC /* TemplateTests.swift */; };
+		44A791741C7B66FE002BC2EC /* Template.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A791671C7B66C4002BC2EC /* Template.swift */; };
+		44A791751C7B66FE002BC2EC /* TemplateParsing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A791681C7B66C4002BC2EC /* TemplateParsing.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -31,14 +32,14 @@
 
 /* Begin PBXFileReference section */
 		44A791461C77827A002BC2EC /* swiftemplate */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = swiftemplate; sourceTree = BUILT_PRODUCTS_DIR; };
-		44A791491C77827A002BC2EC /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		44A791501C778334002BC2EC /* TemplateParsing.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TemplateParsing.swift; sourceTree = "<group>"; };
 		44A791561C7788C7002BC2EC /* swiftemplate-tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "swiftemplate-tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		44A791581C7788C7002BC2EC /* swiftemplate_tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = swiftemplate_tests.swift; sourceTree = "<group>"; };
-		44A7915A1C7788C7002BC2EC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		44A7915E1C77EF3B002BC2EC /* TemplateParsingTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TemplateParsingTests.swift; sourceTree = "<group>"; };
-		44A791611C7A1A24002BC2EC /* Template.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Template.swift; sourceTree = "<group>"; };
-		44A791641C7A84F1002BC2EC /* TemplateTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TemplateTests.swift; sourceTree = "<group>"; };
+		44A791661C7B66C4002BC2EC /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = main.swift; path = Sources/main.swift; sourceTree = SOURCE_ROOT; };
+		44A791671C7B66C4002BC2EC /* Template.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Template.swift; path = Sources/Template.swift; sourceTree = SOURCE_ROOT; };
+		44A791681C7B66C4002BC2EC /* TemplateParsing.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TemplateParsing.swift; path = Sources/TemplateParsing.swift; sourceTree = SOURCE_ROOT; };
+		44A7916C1C7B66F8002BC2EC /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Tests/Info.plist; sourceTree = SOURCE_ROOT; };
+		44A7916D1C7B66F8002BC2EC /* swiftemplate_tests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = swiftemplate_tests.swift; path = Tests/swiftemplate_tests.swift; sourceTree = SOURCE_ROOT; };
+		44A7916E1C7B66F8002BC2EC /* TemplateParsingTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TemplateParsingTests.swift; path = Tests/TemplateParsingTests.swift; sourceTree = SOURCE_ROOT; };
+		44A7916F1C7B66F8002BC2EC /* TemplateTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TemplateTests.swift; path = Tests/TemplateTests.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -80,9 +81,9 @@
 		44A791481C77827A002BC2EC /* swiftemplate */ = {
 			isa = PBXGroup;
 			children = (
-				44A791491C77827A002BC2EC /* main.swift */,
-				44A791501C778334002BC2EC /* TemplateParsing.swift */,
-				44A791611C7A1A24002BC2EC /* Template.swift */,
+				44A791661C7B66C4002BC2EC /* main.swift */,
+				44A791671C7B66C4002BC2EC /* Template.swift */,
+				44A791681C7B66C4002BC2EC /* TemplateParsing.swift */,
 			);
 			path = swiftemplate;
 			sourceTree = "<group>";
@@ -90,10 +91,10 @@
 		44A791571C7788C7002BC2EC /* swiftemplate-tests */ = {
 			isa = PBXGroup;
 			children = (
-				44A791581C7788C7002BC2EC /* swiftemplate_tests.swift */,
-				44A7915A1C7788C7002BC2EC /* Info.plist */,
-				44A7915E1C77EF3B002BC2EC /* TemplateParsingTests.swift */,
-				44A791641C7A84F1002BC2EC /* TemplateTests.swift */,
+				44A7916C1C7B66F8002BC2EC /* Info.plist */,
+				44A7916D1C7B66F8002BC2EC /* swiftemplate_tests.swift */,
+				44A7916E1C7B66F8002BC2EC /* TemplateParsingTests.swift */,
+				44A7916F1C7B66F8002BC2EC /* TemplateTests.swift */,
 			);
 			path = "swiftemplate-tests";
 			sourceTree = "<group>";
@@ -176,6 +177,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				44A791701C7B66F8002BC2EC /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -186,9 +188,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				44A791621C7A1A24002BC2EC /* Template.swift in Sources */,
-				44A7914A1C77827A002BC2EC /* main.swift in Sources */,
-				44A791511C778334002BC2EC /* TemplateParsing.swift in Sources */,
+				44A7916B1C7B66C4002BC2EC /* TemplateParsing.swift in Sources */,
+				44A791691C7B66C4002BC2EC /* main.swift in Sources */,
+				44A7916A1C7B66C4002BC2EC /* Template.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -196,11 +198,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				44A791591C7788C7002BC2EC /* swiftemplate_tests.swift in Sources */,
-				44A791631C7A1A27002BC2EC /* Template.swift in Sources */,
-				44A791651C7A84F1002BC2EC /* TemplateTests.swift in Sources */,
-				44A7915F1C77EF3B002BC2EC /* TemplateParsingTests.swift in Sources */,
-				44A791601C77EF3E002BC2EC /* TemplateParsing.swift in Sources */,
+				44A791751C7B66FE002BC2EC /* TemplateParsing.swift in Sources */,
+				44A791731C7B66F8002BC2EC /* TemplateTests.swift in Sources */,
+				44A791741C7B66FE002BC2EC /* Template.swift in Sources */,
+				44A791721C7B66F8002BC2EC /* TemplateParsingTests.swift in Sources */,
+				44A791711C7B66F8002BC2EC /* swiftemplate_tests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -290,13 +292,18 @@
 		44A7914E1C77827A002BC2EC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
 		44A7914F1C77827A002BC2EC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -304,19 +311,22 @@
 		44A7915C1C7788C7002BC2EC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = "swiftemplate-tests/Info.plist";
+				INFOPLIST_FILE = "Tests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.kineticfactory.swiftemplate-tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
 		44A7915D1C7788C7002BC2EC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = "swiftemplate-tests/Info.plist";
+				INFOPLIST_FILE = "Tests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.kineticfactory.swiftemplate-tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";

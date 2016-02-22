@@ -125,8 +125,10 @@ class TemplateParsingTests: XCTestCase {
             "</ul>",
             "%% endif"
         ]
+        var g = input.generate()
         do {
-            if let tmpl = try parseTemplate(input) {
+            
+            if let tmpl = try parseTemplate(&g) {
                 XCTAssertEqual(tmpl.spec, "foo(items:[String])")
                 XCTAssertEqual(tmpl.elements, [
                     TemplateElement.Literal(text: "<h1>Heading</h1>\n<p>Hello world</p>"),
@@ -146,6 +148,29 @@ class TemplateParsingTests: XCTestCase {
         } catch {
             XCTFail("error thrown")
         }
+    }
+    
+    func testParseTemplates() {
+        let input:[String] = [
+            "%% template foo()",
+            "<p>This is a template</p>",
+            "%% endtemplate",
+            "",
+            "%% template greeting(name:String)",
+            "<p>Hello, \\(name)</p>",
+            "%% endtemplate",
+        ]
+        do {
+            let parsed = try parseTemplates(input)
+            XCTAssertEqual(parsed.count, 2)
+            XCTAssertEqual(parsed[0].spec, "foo()")
+            XCTAssertEqual(parsed[0].elements, [TemplateElement.Literal(text:"<p>This is a template</p>")])
+            XCTAssertEqual(parsed[1].spec, "greeting(name:String)")
+            XCTAssertEqual(parsed[1].elements, [TemplateElement.Literal(text:"<p>Hello, \\(name)</p>")])
+        } catch {
+            XCTFail("error thrown: \(error)")
+        }            
+        
     }
     
 }

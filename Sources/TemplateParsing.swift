@@ -149,15 +149,14 @@ struct TemplateParser<S: SequenceType where S.Generator.Element == String> {
     var input: S
 }
 
-func parseTemplate<S: SequenceType where S.Generator.Element == String>(input: S) throws -> Template? {
-    var g = input.generate()
+func parseTemplate<G: GeneratorType where G.Element == String>(inout input: G) throws -> Template? {
     
     // scan forward to the TemplateStart
     
-    var l: String? = g.next()
+    var l: String? = input.next()
     
     while l != nil && l! == "" {
-        l = g.next()
+        l = input.next()
     }
     if l == nil { return nil }
     
@@ -166,16 +165,16 @@ func parseTemplate<S: SequenceType where S.Generator.Element == String>(input: S
     
     var elements: [TemplateElement] = []
     
-    l = g.next()
+    l = input.next()
     
-    while l != nil {
+    inTemplateLoop: while l != nil {
         
         let tl2 = try TemplateLine(line: l!)
         
         switch(tl2) {
         case .Text(let text): elements.append(.Literal(text:text))
         case .TemplateStart: throw TemplateParseError.UnexpectedInTemplate(line: tl2)
-        case .TemplateEnd: break
+        case .TemplateEnd: break inTemplateLoop
         case .ForStart(let variable, let iterable): elements.append(.Code(code:"for \(variable) in \(iterable) {"))
         case .ForEnd: elements.append(.Code(code:"}"))
         case .IfStart(let expression): elements.append(.Code(code:"if \(expression) {"))
@@ -184,9 +183,21 @@ func parseTemplate<S: SequenceType where S.Generator.Element == String>(input: S
         case .IfEnd: elements.append(.Code(code:"}"))
         }
         
-        l = g.next()
+        l = input.next()
     }
     
     return Template(spec: spec, elements: simplifyTemplateElements(elements))
+}
+
+func parseTemplates<S: SequenceType where S.Generator.Element == String>(input: S) throws -> [Template] {
+    var g = input.generate()
+    var r = [Template]()
+    
+    var parsed = try parseTemplate(&g)
+    while let template = parsed {
+        r.append(template)
+        parsed = try parseTemplate(&g)
+    }
+    return r
 }
 
