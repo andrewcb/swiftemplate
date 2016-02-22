@@ -1,5 +1,5 @@
 //
-//  TemplateLineTests.swift
+//  TemplateParsingTests.swift
 //  swiftemplate
 //
 //  Created by acb on 20/02/2016.
@@ -13,7 +13,7 @@ func == <A : Equatable, B : Equatable>(lhs: (A, B), rhs: (A, B)) -> Bool
     return (lhs.0 == rhs.0) && (lhs.1 == rhs.1)
 }
 
-class TemplateLineTests: XCTestCase {
+class TemplateParsingTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
@@ -107,4 +107,44 @@ class TemplateLineTests: XCTestCase {
             XCTFail("error thrown")
         }
     }
+    
+    // ---------------
+    
+    func testParseTemplate() {
+        let input: [String] = [
+            "%% template foo(items:[String])",
+            "<p>Hello world</p>",
+            "%% if items.isEmpty",
+            "<p>There are no items</p>",
+            "%% else",
+            "<ul>",
+            "%% for item in items",
+            "<li>\\"+"(item)</li>",
+            "%% endfor",
+            "</ul>",
+            "%% endif"
+        ]
+        do {
+            if let tmpl = try parseTemplate(input) {
+                XCTAssertEqual(tmpl.spec, "foo(items:[String])")
+                XCTAssertEqual(tmpl.elements, [
+                    TemplateElement.Literal(text: "<p>Hello world</p>"),
+                    TemplateElement.Code(code: "if items.isEmpty {"),
+                    TemplateElement.Literal(text:"<p>There are no items</p>"),
+                    TemplateElement.Code(code: "} else {"),
+                    TemplateElement.Literal(text: "<ul>"),
+                    TemplateElement.Code(code: "for item in items {"),
+                    TemplateElement.Literal(text: "<li>\\"+"(item)</li>"),
+                    TemplateElement.Code(code: "}"),
+                    TemplateElement.Literal(text: "</ul>"),
+                    TemplateElement.Code(code: "}")
+                    ])
+            } else {
+                XCTFail("parseTemplate returned null")
+            }
+        } catch {
+            XCTFail("error thrown")
+        }
+    }
+    
 }

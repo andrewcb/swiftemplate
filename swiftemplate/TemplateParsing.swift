@@ -1,5 +1,5 @@
 //
-//  TemplateLine.swift
+//  TemplateParsing.swift
 //  swiftemplate
 //
 //  Created by acb on 19/02/2016.
@@ -76,11 +76,14 @@ extension String {
     }
 }
 
-/* A line from the file, as read at parsing time. This is not to be confused with the internal representation of a template. */
+enum TemplateParseError: ErrorType {
+    case InvalidDirective(line: String)
+    case UnexpectedAtTopLevel(line: TemplateLine)
+    case UnexpectedInTemplate(line: TemplateLine)
+}
+
+/* A line from the file, as read at parsing time. This is not to be confused with the internal representation of a template.t */
 enum TemplateLine: Equatable {
-    enum Error: ErrorType {
-        case InvalidDirective(line: String)
-    }
     
     case Text(text: String)
     case TemplateStart(spec: String)
@@ -110,14 +113,14 @@ enum TemplateLine: Equatable {
                     where inliteral == "in" {
                         self = ForStart(variable: variable, iterable: iterable)
                 } else {
-                    throw Error.InvalidDirective(line: rest)
+                    throw TemplateParseError.InvalidDirective(line: rest)
                 }
             case "endfor": self = ForEnd
             case "template": self = TemplateStart(spec: rest)
             case "endtemplate": self = TemplateEnd
                 
             default: 
-                throw Error.InvalidDirective(line: rest)
+                throw TemplateParseError.InvalidDirective(line: rest)
             }
         } else {
             self = Text(text:line)
@@ -139,5 +142,51 @@ func ==(lhs: TemplateLine, rhs:TemplateLine) -> Bool {
 
     default: return false
     }
+}
+
+
+struct TemplateParser<S: SequenceType where S.Generator.Element == String> {
+    var input: S
+}
+
+func parseTemplate<S: SequenceType where S.Generator.Element == String>(input: S) throws -> Template? {
+    var g = input.generate()
+    
+    // scan forward to the TemplateStart
+    
+    var l: String? = g.next()
+    
+    while l != nil && l! == "" {
+        l = g.next()
+    }
+    if l == nil { return nil }
+    
+    let tl = try TemplateLine(line: l!)
+    guard case let TemplateLine.TemplateStart(spec) = tl else { throw TemplateParseError.UnexpectedAtTopLevel(line: tl) }
+    
+    var elements: [TemplateElement] = []
+    
+    l = g.next()
+    
+    while l != nil {
+        
+        let tl2 = try TemplateLine(line: l!)
+        
+        switch(tl2) {
+        case .Text(let text): elements.append(.Literal(text:text))
+        case .TemplateStart: throw TemplateParseError.UnexpectedInTemplate(line: tl2)
+        case .TemplateEnd: break
+        case .ForStart(let variable, let iterable): elements.append(.Code(code:"for \(variable) in \(iterable) {"))
+        case .ForEnd: elements.append(.Code(code:"}"))
+        case .IfStart(let expression): elements.append(.Code(code:"if \(expression) {"))
+        case .IfElif(let expression): elements.append(.Code(code:"} else if \(expression) {"))
+        case .IfElse: elements.append(.Code(code:"} else {"))
+        case .IfEnd: elements.append(.Code(code:"}"))
+        }
+        
+        l = g.next()
+    }
+    
+    return Template(spec: spec, elements: elements)
 }
 
