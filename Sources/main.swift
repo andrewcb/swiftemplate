@@ -57,16 +57,15 @@ if infiles.isEmpty {
     do {
         let templates = try infiles.flatMap(parseFile)
         
-        let outfd = outputName.map { open($0, O_CREAT, 0o644) } ?? STDOUT_FILENO
+        let outfd = outputName.map { open($0, O_CREAT | O_WRONLY | O_TRUNC, 0o644) } ?? STDOUT_FILENO
         if outfd<0 {
             throw Error(message:"unable to open \(outputName!) for writing")
         }
-        //defer { close(outfd) }
+        defer { close(outfd) }
         for template in templates {
             let code = template.asCode
-            guard let bytes = code.cStringUsingEncoding(NSUTF8StringEncoding) else {
-                throw Error(message:"unable to encode template to UTF-8?!")
-            }
+            let bytes = [UInt8](code.utf8)
+            
             let written = write(outfd, UnsafePointer(bytes), bytes.count)
             if written < bytes.count {
                 throw Error(message:"error writing to file")
