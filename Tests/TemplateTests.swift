@@ -52,16 +52,21 @@ class TemplateTests: XCTestCase {
         
         
         XCTAssertEqual(TemplateElement.Code(code:"if i<0 {").asCode, "if i<0 {")
+        
+        XCTAssertEqual(TemplateElement.Expression(code:"2+3").asCode, "r.append(String(2+3))")
+        XCTAssertEqual(TemplateElement.Expression(code:"\"abc\".characters.count").asCode, "r.append(String(\"abc\".characters.count))")
     }
     
     func testTemplateAsCode() {
-        let t1 = Template(spec: "f1(a:Int)", elements: [
+        let t1 = Template(spec: "f1(a:[Int])", elements: [
             TemplateElement.Literal(text:"<h1>this is a test</h1>"),
-            TemplateElement.Code(code:"if a==0 {"),
+            TemplateElement.Code(code:"if a.isEmpty {"),
             TemplateElement.Literal(text:"<p>Zilch</p>"),
+            TemplateElement.Code(code:"} else {"),
+            TemplateElement.Expression(code: "a.count"),
             TemplateElement.Code(code:"}"),
         ])
-        XCTAssertEqual(t1.asCode, "func f1(a:Int) -> String {\nvar r=[String]()\nr.append(\"<h1>this is a test</h1>\")\nif a==0 {\nr.append(\"<p>Zilch</p>\")\n}\nreturn r.joinWithSeparator(\" \")\n}\n")
+        XCTAssertEqual(t1.asCode, "func f1(a:[Int]) -> String {\nvar r=[String]()\nr.append(\"<h1>this is a test</h1>\")\nif a.isEmpty {\nr.append(\"<p>Zilch</p>\")\n} else {\nr.append(String(a.count))\n}\nreturn r.joinWithSeparator(\" \")\n}\n")
     }
 
 }

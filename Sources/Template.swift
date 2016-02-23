@@ -33,11 +33,14 @@ enum TemplateElement : Equatable {
     case Literal(text: String)
     /// a block of Swift code
     case Code(code: String)
+    /// a string expression to be added to the buffer
+    case Expression(code: String)
     
     var asCode: String {
         switch(self) {
         case .Literal(let text): return "r.append(\(text.swiftLiteralQuoted))"
         case .Code(let code): return code
+        case .Expression(let code): return "r.append(String(\(code)))"
         }
     }
 }
@@ -46,6 +49,7 @@ func ==(lhs: TemplateElement, rhs: TemplateElement) -> Bool {
     switch((lhs, rhs)) {
     case (.Literal(let ltext), .Literal(let rtext)): return ltext == rtext
     case (.Code(let lcode), .Code(let rcode)): return lcode == rcode
+    case (.Expression(let lcode), .Expression(let rcode)): return lcode == rcode
     default: return false
     }
 }
