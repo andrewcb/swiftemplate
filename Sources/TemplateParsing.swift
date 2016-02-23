@@ -76,14 +76,22 @@ extension String {
     }
 }
 
-enum TemplateParseError: ErrorType {
+enum TemplateParseError: ErrorType, CustomStringConvertible {
     case InvalidDirective(line: String)
     case UnexpectedAtTopLevel(line: TemplateLine)
     case UnexpectedInTemplate(line: TemplateLine)
+    
+    var description: String {
+        switch(self) {
+        case InvalidDirective(let line): return "Invalid directive: \(line)"
+        case UnexpectedAtTopLevel(let line): return "Unexpected directive at top level: \(line)"
+        case UnexpectedInTemplate(let line): return "Unexpected directive in template: \(line)"
+        }
+    }
 }
 
 /* A line from the file, as read at parsing time. This is not to be confused with the internal representation of a template.t */
-enum TemplateLine: Equatable {
+enum TemplateLine: Equatable, CustomStringConvertible {
     
     case Text(text: String)
     case TemplateStart(spec: String)
@@ -124,6 +132,20 @@ enum TemplateLine: Equatable {
             }
         } else {
             self = Text(text:line)
+        }
+    }
+    
+    var description: String {
+        switch(self) {
+        case .Text(let text): return text
+        case .TemplateStart(let spec): return "template \(spec)"
+        case .TemplateEnd: return "endtemplate"
+        case .ForStart(let variable, let iterable): return "for \(variable) in \(iterable)"
+        case .ForEnd: return "endfor"
+        case .IfStart(let expr): return "if \(expr)"
+        case .IfElif(let expr): return "else if \(expr)"
+        case .IfElse: return "else"
+        case .IfEnd: return "endif"
         }
     }
 }

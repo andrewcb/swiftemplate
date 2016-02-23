@@ -61,7 +61,7 @@ class TemplateTests: XCTestCase {
             TemplateElement.Literal(text:"<p>Zilch</p>"),
             TemplateElement.Code(code:"}"),
         ])
-        XCTAssertEqual(t1.asCode, "func f1(a:Int) {\nvar r=[String]()\nr.append(\"<h1>this is a test</h1>\")\nif a==0 {\nr.append(\"<p>Zilch</p>\")\n}\nreturn r.joinWithSeparator(\" \")\n}\n")
+        XCTAssertEqual(t1.asCode, "func f1(a:Int) -> String {\nvar r=[String]()\nr.append(\"<h1>this is a test</h1>\")\nif a==0 {\nr.append(\"<p>Zilch</p>\")\n}\nreturn r.joinWithSeparator(\" \")\n}\n")
     }
 
 }

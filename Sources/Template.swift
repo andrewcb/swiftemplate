@@ -13,7 +13,7 @@ extension String {
         var r: String = "\""
         for ch in self.characters {
             switch(ch) {
-            case "\\": r.appendContentsOf("\\\\")
+            //case "\\": r.appendContentsOf("\\\\")
             case "\"": r.appendContentsOf("\\\"")
             case "\r": r.appendContentsOf("\\r")
             case "\n": r.appendContentsOf("\\n")
@@ -86,7 +86,7 @@ struct Template {
     
     /** Emit the Swift code for a template */
     var asCode: String {
-        let start: String = "func \(spec) {\nvar r=[String]()\n"
+        let start: String = "func \(spec) -> String {\nvar r=[String]()\n"
         let end: String = "\nreturn r.joinWithSeparator(\" \")\n}\n"
         return start + (self.elements.map { $0.asCode}).joinWithSeparator("\n")  + end
     }
