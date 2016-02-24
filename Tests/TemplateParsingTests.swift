@@ -231,4 +231,110 @@ class TemplateParsingTests: XCTestCase {
         
     }
     
+    func testDetectTemplateErrorInvalidDirective() {
+        let input: [String] = [
+            "%% template foo()",
+            "%% blah",
+            "%% endtemplate"
+        ]
+        do {
+            try parseTemplates(input, filename:"test")
+            XCTFail("No error caught in malformed input")
+        } catch {
+            if case let TemplateParseError.InvalidDirective(fn, ln, text) = error {
+                XCTAssertEqual(fn, "test")
+                XCTAssertEqual(ln, 2)
+                XCTAssertEqual(text, "blah")
+            } else {
+                XCTFail("Error of wrong type: \(error)")
+            }
+        }
+    }
+    
+    func testDetectTemplateErrorUnexpectedAtTopLevel() {
+        let input: [String] = [
+            "%% for i in [1,2,3]",
+            "\\(i)",
+            "%% endfor"
+        ]
+        do {
+            try parseTemplates(input, filename:"test")
+            XCTFail("No error caught in malformed input")
+        } catch {
+            if case let TemplateParseError.UnexpectedAtTopLevel(fn, ln, text) = error {
+                XCTAssertEqual(fn, "test")
+                XCTAssertEqual(ln, 1)
+                XCTAssertEqual(text, TemplateLine.ForStart(variable: "i", iterable: "[1,2,3]"))
+            } else {
+                XCTFail("Error of wrong type: \(error)")
+            }
+        }
+    }    
+    
+    func testDetectTemplateErrorUnexpectedInTemplate() {
+        let input: [String] = [
+            "%% template blah()",
+            "<%",
+            "let foo = bar",
+            "%>",
+            "%% template blah()",
+            "%% endtemplate"
+        ]
+        do {
+            try parseTemplates(input, filename:"test")
+            XCTFail("No error caught in malformed input")
+        } catch {
+            if case let TemplateParseError.UnexpectedInTemplate(fn, ln, text) = error {
+                XCTAssertEqual(fn, "test")
+                XCTAssertEqual(ln, 5)
+                XCTAssertEqual(text, TemplateLine.TemplateStart(spec: "blah()"))
+            } else {
+                XCTFail("Error of wrong type: \(error)")
+            }
+        }
+    }
+    
+    func testDetectTemplateErrorUnclosedExpression() {
+        let input: [String] = [
+            "",
+            "// this is a comment to bump the line index up",
+            "",
+            "%% template blah()",
+            "<h1>This is <%= [1,2,3].count",
+            "%% endtemplate"
+        ]
+        do {
+            try parseTemplates(input, filename:"test")
+            XCTFail("No error caught in malformed input")
+        } catch {
+            if case let TemplateParseError.UnclosedExpression(fn, ln, text) = error {
+                XCTAssertEqual(fn, "test")
+                XCTAssertEqual(ln, 5)
+                XCTAssertEqual(text, "<h1>This is <%= [1,2,3].count")
+            } else {
+                XCTFail("Error of wrong type: \(error)")
+            }
+        }
+    }
+    
+    func testDetectTemplateErrorUnclosedCodeBlock() {
+        let input: [String] = [
+            "%% template blah()",
+            "<h1>This is <%= [1,2,3].count %>",
+            "<%",
+            "let foo = 23",
+            "%% endtemplate"
+        ]
+        do {
+            try parseTemplates(input, filename:"test")
+            XCTFail("No error caught in malformed input")
+        } catch {
+            if case let TemplateParseError.UnclosedCodeBlock(fn, ln) = error {
+                XCTAssertEqual(fn, "test")
+                XCTAssertEqual(ln, 3)
+            } else {
+                XCTFail("Error of wrong type: \(error)")
+            }
+        }
+    }
 }
