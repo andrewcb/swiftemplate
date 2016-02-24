@@ -8,6 +8,14 @@
 
 import Foundation
 
+//  Tokens to look for
+
+let TokenLineEscape = "%%"
+let TokenExprOpen = "<%="  // start of an inline expression
+let TokenExprClose = "%>"  // end of an inline expression
+let TokenCodeOpen = "<%"   // start of a code block
+let TokenCodeClose = "%>"  // end of a code block
+
 extension Character {
     var isspace: Bool {
         return self == " " || self == "\t"
@@ -69,7 +77,7 @@ extension String {
     var textAfterEscape: String? {
         guard let firstNonSpace = (self.firstIndexMatching { !$0.isspace }) else { return nil }
         
-        if self[firstNonSpace..<self.endIndex].hasPrefix("%%") {
+        if self[firstNonSpace..<self.endIndex].hasPrefix(TokenLineEscape) {
             let afterEsc = self.firstIndexMatching({!$0.isspace}, from:firstNonSpace.advancedBy(2))
             return afterEsc.flatMap { self[$0..<self.endIndex].rstrip }
         }
@@ -93,6 +101,7 @@ enum TemplateParseError: ErrorType, CustomStringConvertible {
     case UnexpectedAtTopLevel(line: TemplateLine)
     case UnexpectedInTemplate(line: TemplateLine)
     case UnclosedExpression(line: String)
+    case UnclosedCodeBlock
     
     var description: String {
         switch(self) {
@@ -100,6 +109,7 @@ enum TemplateParseError: ErrorType, CustomStringConvertible {
         case UnexpectedAtTopLevel(let line): return "Unexpected directive at top level: \(line)"
         case UnexpectedInTemplate(let line): return "Unexpected directive in template: \(line)"
         case UnclosedExpression(let line): return "No closing tag for expression in template: \(line)"
+        case UnclosedCodeBlock: return "No closing tag for code block in template"
         }
     }
 }
@@ -182,15 +192,15 @@ func ==(lhs: TemplateLine, rhs:TemplateLine) -> Bool {
 
 /** Return a list of template elements for a line of literal text. */
 func templateElementsForLiteralLine(line: String) throws -> [TemplateElement] {
-    if let openStartIndex = line.findSubstring("<%=") {
-        let openEndIndex = openStartIndex.advancedBy(3)
-        guard let closeStartIndex = line.findSubstring("%>", from: openEndIndex) else {
+    if let openStartIndex = line.findSubstring(TokenExprOpen) {
+        let openEndIndex = openStartIndex.advancedBy(TokenExprOpen.characters.count)
+        guard let closeStartIndex = line.findSubstring(TokenExprClose, from: openEndIndex) else {
             throw TemplateParseError.UnclosedExpression(line: line)
         }
-        let closeEndIndex = closeStartIndex.advancedBy(2)
+        let closeEndIndex = closeStartIndex.advancedBy(TokenExprClose.characters.count)
         
         let initialText:String? = (openStartIndex > line.startIndex) ? line[line.startIndex..<openStartIndex] : nil
-        let exprText = (openEndIndex < closeStartIndex) ? line[openStartIndex.advancedBy(3)..<closeStartIndex].strip : nil
+        let exprText = (openEndIndex < closeStartIndex) ? line[openEndIndex..<closeStartIndex].strip : nil
         let theseElements: [TemplateElement] = [
             initialText.map { TemplateElement.Literal(text: $0) }, 
             exprText.map { TemplateElement.Expression(code: $0 ) }
@@ -223,18 +233,34 @@ func parseTemplate<G: GeneratorType where G.Element == String>(inout input: G) t
     
     inTemplateLoop: while l != nil {
         
-        let tl2 = try TemplateLine(line: l!)
+        if l!.strip == TokenCodeOpen {
+            // consume all lines until the code close token, and build a code block from them
+            var l2: String? = input.next()
+            var codelines: [String] = []
+            
+            while l2 != nil && l2!.strip != TokenCodeClose {
+                codelines.append(l2!)
+                
+                l2 = input.next()
+            }
+            if l2 == nil { throw TemplateParseError.UnclosedCodeBlock }
+            
+            elements.append(.Code(code:codelines.joinWithSeparator("\n")))
+        } else {
         
-        switch(tl2) {
-        case .Text(let text): try elements.appendContentsOf(templateElementsForLiteralLine(text))
-        case .TemplateStart: throw TemplateParseError.UnexpectedInTemplate(line: tl2)
-        case .TemplateEnd: break inTemplateLoop
-        case .ForStart(let variable, let iterable): elements.append(.Code(code:"for \(variable) in \(iterable) {"))
-        case .ForEnd: elements.append(.Code(code:"}"))
-        case .IfStart(let expression): elements.append(.Code(code:"if \(expression) {"))
-        case .IfElif(let expression): elements.append(.Code(code:"} else if \(expression) {"))
-        case .IfElse: elements.append(.Code(code:"} else {"))
-        case .IfEnd: elements.append(.Code(code:"}"))
+            let tl2 = try TemplateLine(line: l!)
+            
+            switch(tl2) {
+            case .Text(let text): try elements.appendContentsOf(templateElementsForLiteralLine(text))
+            case .TemplateStart: throw TemplateParseError.UnexpectedInTemplate(line: tl2)
+            case .TemplateEnd: break inTemplateLoop
+            case .ForStart(let variable, let iterable): elements.append(.Code(code:"for \(variable) in \(iterable) {"))
+            case .ForEnd: elements.append(.Code(code:"}"))
+            case .IfStart(let expression): elements.append(.Code(code:"if \(expression) {"))
+            case .IfElif(let expression): elements.append(.Code(code:"} else if \(expression) {"))
+            case .IfElse: elements.append(.Code(code:"} else {"))
+            case .IfEnd: elements.append(.Code(code:"}"))
+            }
         }
         
         l = input.next()

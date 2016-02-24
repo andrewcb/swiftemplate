@@ -157,6 +157,10 @@ class TemplateParsingTests: XCTestCase {
     func testParseTemplate() {
         let input: [String] = [
             "%% template foo(items:[String])",
+            "<%",
+            "let numitems = items.count",
+            "let sortedItems = items.sort()",
+            "%>",
             "<h1>Heading</h1>",
             "<p>Hello world</p>",
             "%% if items.isEmpty",
@@ -176,6 +180,7 @@ class TemplateParsingTests: XCTestCase {
             if let tmpl = try parseTemplate(&g) {
                 XCTAssertEqual(tmpl.spec, "foo(items:[String])")
                 XCTAssertEqual(tmpl.elements, [
+                    TemplateElement.Code(code: "let numitems = items.count\nlet sortedItems = items.sort()"),
                     TemplateElement.Literal(text: "<h1>Heading</h1>\n<p>Hello world</p>"),
                     TemplateElement.Code(code: "if items.isEmpty {"),
                     TemplateElement.Literal(text:"<p>There are no items</p>"),
