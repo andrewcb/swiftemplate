@@ -204,6 +204,7 @@ class TemplateParsingTests: XCTestCase {
     
     func testParseTemplates() {
         let input:[String] = [
+            "// This is a comment",
             "%% template foo()",
             "<p>This is a template</p>",
             "%% endtemplate",

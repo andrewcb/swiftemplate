@@ -219,7 +219,7 @@ func parseTemplate<G: GeneratorType where G.Element == String>(inout input: G) t
     
     var l: String? = input.next()
     
-    while l != nil && l! == "" {
+    while l != nil && (l! == "" || l!.lstrip?.hasPrefix("//") ?? true ) {
         l = input.next()
     }
     if l == nil { return nil }
