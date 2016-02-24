@@ -24,6 +24,12 @@ class TemplateParsingTests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         super.tearDown()
     }
+    
+    func testStringFindSubstring() {
+        let str1 = "abcde"
+        XCTAssertEqual(str1.findSubstring("cde"), str1.startIndex.advancedBy(2))
+        XCTAssertEqual(str1.findSubstring("xyz"), nil)
+    }
 
     func testStringLstrip() {
         // This is an example of a functional test case.
@@ -110,6 +116,44 @@ class TemplateParsingTests: XCTestCase {
     
     // ---------------
     
+    func testTemplateElementsForLiteralLine() {
+        do {
+            let el0 = try templateElementsForLiteralLine("this is literal only")
+            XCTAssertEqual(el0,[TemplateElement.Literal(text:"this is literal only")])
+            
+            let el1 = try templateElementsForLiteralLine("foo <%= 2+3 %> bar")
+            XCTAssertEqual(el1,[
+                TemplateElement.Literal(text:"foo "),
+                TemplateElement.Expression(code:"2+3"),
+                TemplateElement.Literal(text:" bar")
+            ])
+
+            let el2 = try templateElementsForLiteralLine("foo <%= 2+3 %>")
+            XCTAssertEqual(el2,[
+                TemplateElement.Literal(text:"foo "),
+                TemplateElement.Expression(code:"2+3")
+            ])
+
+            let el3 = try templateElementsForLiteralLine("<%= 2+3 %> bar")
+            XCTAssertEqual(el3,[
+                TemplateElement.Expression(code:"2+3"),
+                TemplateElement.Literal(text:" bar")
+            ])
+            
+            let el4 = try templateElementsForLiteralLine("<%= 2+3 %> bar <%=items.count%><%= currentTime() %>")
+            XCTAssertEqual(el4,[
+                TemplateElement.Expression(code:"2+3"),
+                TemplateElement.Literal(text:" bar "),
+                TemplateElement.Expression(code:"items.count"),
+                TemplateElement.Expression(code:"currentTime()")
+                ])
+        } catch {
+            XCTFail("error thrown")
+        }
+    }
+    
+    // ---------------
+    
     func testParseTemplate() {
         let input: [String] = [
             "%% template foo(items:[String])",
@@ -118,6 +162,7 @@ class TemplateParsingTests: XCTestCase {
             "%% if items.isEmpty",
             "<p>There are no items</p>",
             "%% else",
+            "<p>There are <%= items.count %> items</p>",
             "<ul>",
             "%% for item in items",
             "<li>\\"+"(item)</li>",
@@ -135,7 +180,9 @@ class TemplateParsingTests: XCTestCase {
                     TemplateElement.Code(code: "if items.isEmpty {"),
                     TemplateElement.Literal(text:"<p>There are no items</p>"),
                     TemplateElement.Code(code: "} else {"),
-                    TemplateElement.Literal(text: "<ul>"),
+                    TemplateElement.Literal(text: "<p>There are "),
+                    TemplateElement.Expression(code: "items.count"),
+                    TemplateElement.Literal(text: " items</p>\n<ul>"),
                     TemplateElement.Code(code: "for item in items {"),
                     TemplateElement.Literal(text: "<li>\\"+"(item)</li>"),
                     TemplateElement.Code(code: "}"),

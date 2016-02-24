@@ -39,6 +39,18 @@ extension String {
         return self.lastIndexNotMatching(predicate, to:self.characters.endIndex)
     }
     
+    func findSubstring(substring: String, from: String.CharacterView.Index) -> String.CharacterView.Index? {
+        var index = from
+        while index != self.characters.endIndex && !self[index..<self.endIndex].hasPrefix(substring) {
+            index = index.successor()
+        }
+        return (index != self.characters.endIndex) ? index : nil
+    }
+    
+    func findSubstring(substring: String) -> String.CharacterView.Index? { 
+        return self.findSubstring(substring, from: self.characters.startIndex)
+    }
+    
     // these return optionals because, this not being Python, we can.
     var lstrip: String? {
         return self.firstIndexMatching{ !$0.isspace }.map { self[$0..<self.endIndex] }
@@ -80,12 +92,14 @@ enum TemplateParseError: ErrorType, CustomStringConvertible {
     case InvalidDirective(line: String)
     case UnexpectedAtTopLevel(line: TemplateLine)
     case UnexpectedInTemplate(line: TemplateLine)
+    case UnclosedExpression(line: String)
     
     var description: String {
         switch(self) {
         case InvalidDirective(let line): return "Invalid directive: \(line)"
         case UnexpectedAtTopLevel(let line): return "Unexpected directive at top level: \(line)"
         case UnexpectedInTemplate(let line): return "Unexpected directive in template: \(line)"
+        case UnclosedExpression(let line): return "No closing tag for expression in template: \(line)"
         }
     }
 }
@@ -166,9 +180,27 @@ func ==(lhs: TemplateLine, rhs:TemplateLine) -> Bool {
     }
 }
 
-
-struct TemplateParser<S: SequenceType where S.Generator.Element == String> {
-    var input: S
+/** Return a list of template elements for a line of literal text. */
+func templateElementsForLiteralLine(line: String) throws -> [TemplateElement] {
+    if let openStartIndex = line.findSubstring("<%=") {
+        let openEndIndex = openStartIndex.advancedBy(3)
+        guard let closeStartIndex = line.findSubstring("%>", from: openEndIndex) else {
+            throw TemplateParseError.UnclosedExpression(line: line)
+        }
+        let closeEndIndex = closeStartIndex.advancedBy(2)
+        
+        let initialText:String? = (openStartIndex > line.startIndex) ? line[line.startIndex..<openStartIndex] : nil
+        let exprText = (openEndIndex < closeStartIndex) ? line[openStartIndex.advancedBy(3)..<closeStartIndex].strip : nil
+        let theseElements: [TemplateElement] = [
+            initialText.map { TemplateElement.Literal(text: $0) }, 
+            exprText.map { TemplateElement.Expression(code: $0 ) }
+        ].flatMap { $0 }
+        
+        return theseElements + ((closeEndIndex<line.endIndex) ? try templateElementsForLiteralLine(line[closeEndIndex..<line.endIndex]) : [TemplateElement]())
+        
+    } else {
+        return [.Literal(text:line)]
+    }
 }
 
 func parseTemplate<G: GeneratorType where G.Element == String>(inout input: G) throws -> Template? {
@@ -194,7 +226,7 @@ func parseTemplate<G: GeneratorType where G.Element == String>(inout input: G) t
         let tl2 = try TemplateLine(line: l!)
         
         switch(tl2) {
-        case .Text(let text): elements.append(.Literal(text:text))
+        case .Text(let text): try elements.appendContentsOf(templateElementsForLiteralLine(text))
         case .TemplateStart: throw TemplateParseError.UnexpectedInTemplate(line: tl2)
         case .TemplateEnd: break inTemplateLoop
         case .ForStart(let variable, let iterable): elements.append(.Code(code:"for \(variable) in \(iterable) {"))
