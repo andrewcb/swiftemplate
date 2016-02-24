@@ -219,43 +219,46 @@ func parseTemplate<G: GeneratorType where G.Element == (Int, String)>(inout inpu
     
     var l: (Int, String)? = input.next()
     
-    while l != nil && (l!.1 == "" || l!.1.lstrip?.hasPrefix("//") ?? true ) {
+    while l != nil && (l!.1.lstrip?.hasPrefix("//") ?? true ) {
         l = input.next()
     }
-    if l == nil { return nil }
+    guard let (ln, line) = l else { return nil }
     
-    let tl = try TemplateLine(line: l!.1, filename:filename, ln: l!.0)
-    guard case let TemplateLine.TemplateStart(spec) = tl else { throw TemplateParseError.UnexpectedAtTopLevel(filename:filename, ln:l!.0, line: tl) }
+    let tl = try TemplateLine(line: line, filename:filename, ln: ln)
+    guard case let TemplateLine.TemplateStart(spec) = tl else { throw TemplateParseError.UnexpectedAtTopLevel(filename:filename, ln:ln, line: tl) }
     
     var elements: [TemplateElement] = []
     
     l = input.next()
     
     inTemplateLoop: while l != nil {
+        let (ln, line) = l!
         
-        if l!.1.strip == TokenCodeOpen {
+        if line.strip == TokenCodeOpen {
             // consume all lines until the code close token, and build a code block from them
             var l2: (Int, String)? = input.next()
             var codelines: [String] = []
             
-            while l2 != nil && l2!.1.strip != TokenCodeClose {
+            //while l2 != nil && l2!.1.strip != TokenCodeClose {
+            while let (_, line2) = l2 {
+                if line2.strip == TokenCodeClose { break }
                 codelines.append(l2!.1)
                 
                 l2 = input.next()
             }
-            if l2 == nil { throw TemplateParseError.UnclosedCodeBlock(filename:filename, ln:l!.0) }
+            if l2 == nil { throw TemplateParseError.UnclosedCodeBlock(filename:filename, ln:ln) }
             
             elements.append(.Code(code:codelines.joinWithSeparator("\n")))
         } else {
             
             // allow %% // line comments
-            if !(l!.1.textAfterEscape?.lstrip?.hasPrefix("//") ?? false) {
+            if !(line.textAfterEscape?.lstrip?.hasPrefix("//") ?? false) {
         
-                let tl2 = try TemplateLine(line: l!.1, filename:filename, ln:l!.0)
+                let tl2 = try TemplateLine(line: line, filename:filename, ln:ln)
                 
                 switch(tl2) {
-                case .Text(let text): try elements.appendContentsOf(templateElementsForLiteralLine(text, filename:filename, ln:l!.0))
-                case .TemplateStart: throw TemplateParseError.UnexpectedInTemplate(filename:filename, ln:l!.0, line: tl2)
+                case .Text(let text): try elements.appendContentsOf(templateElementsForLiteralLine(text, filename:filename, ln:ln))
+                case .TemplateStart: throw TemplateParseError.UnexpectedInTemplate(filename:filename, ln:ln, line: tl2)
                 case .TemplateEnd: break inTemplateLoop
                 case .ForStart(let variable, let iterable): elements.append(.Code(code:"for \(variable) in \(iterable) {"))
                 case .ForEnd: elements.append(.Code(code:"}"))

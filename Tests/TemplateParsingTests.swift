@@ -162,6 +162,7 @@ class TemplateParsingTests: XCTestCase {
             "let sortedItems = items.sort()",
             "%>",
             "<h1>Heading</h1>",
+            "%% // this is a comment",
             "<p>Hello world</p>",
             "%% if items.isEmpty",
             "<p>There are no items</p>",
