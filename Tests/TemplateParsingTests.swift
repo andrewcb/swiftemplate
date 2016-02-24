@@ -156,6 +156,8 @@ class TemplateParsingTests: XCTestCase {
     
     func testParseTemplate() {
         let input: [String] = [
+            " // this is a comment",
+            "",
             "%% template foo(items:[String])",
             "<%",
             "let numitems = items.count",

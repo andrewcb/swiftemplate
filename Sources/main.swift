@@ -30,7 +30,6 @@ while let arg = arggen.next() {
 
 struct Error: ErrorType, CustomStringConvertible {
     let message: String
-    
     var description:String { return message }
 }
 
@@ -48,7 +47,6 @@ func parseFile(path: String) throws -> [Template] {
     } else {
         throw Error(message:"Contents of \(path) are not a valid string")
     }
-    
 }
 
 if infiles.isEmpty {
@@ -59,7 +57,7 @@ if infiles.isEmpty {
         
         let outfd = outputName.map { open($0, O_CREAT | O_WRONLY | O_TRUNC, 0o644) } ?? STDOUT_FILENO
         if outfd<0 {
-            throw Error(message:"unable to open \(outputName!) for writing")
+            throw Error(message:"Unable to open \(outputName!) for writing")
         }
         defer { close(outfd) }
         for template in templates {
@@ -68,12 +66,10 @@ if infiles.isEmpty {
             
             let written = write(outfd, UnsafePointer(bytes), bytes.count)
             if written < bytes.count {
-                throw Error(message:"error writing to file")
+                throw Error(message:"Error writing to file")
             }
-            
         }
-        
     } catch {
-        print("An error occurred: \(error)")
+        print(error)
     }
 }

@@ -23,6 +23,7 @@ extension Character {
 }
 
 extension String {
+    /** Return the first index at or after a point where the character meets a criterion  */
     func firstIndexMatching(predicate: (Character)->Bool, from: String.CharacterView.Index) -> String.CharacterView.Index? {
         var index = from
         while index != self.characters.endIndex && !predicate(self.characters[index]) {
@@ -31,6 +32,7 @@ extension String {
         return (index != self.characters.endIndex) ? index : nil
     }
     
+    /** Return the last index not matching a criterion, following one which matches */
     func lastIndexNotMatching(predicate: (Character)->Bool, to: String.CharacterView.Index) -> String.CharacterView.Index? {
         var index = to
         while index != self.characters.startIndex && !predicate(self.characters[index.predecessor()]) {
@@ -47,6 +49,7 @@ extension String {
         return self.lastIndexNotMatching(predicate, to:self.characters.endIndex)
     }
     
+    /** Find the first occurrence of a substring in the string */
     func findSubstring(substring: String, from: String.CharacterView.Index) -> String.CharacterView.Index? {
         var index = from
         while index != self.characters.endIndex && !self[index..<self.endIndex].hasPrefix(substring) {
@@ -60,10 +63,12 @@ extension String {
     }
     
     // these return optionals because, this not being Python, we can.
+    /** Return the string with leading whitespace stripped, or nil if empty */
     var lstrip: String? {
         return self.firstIndexMatching{ !$0.isspace }.map { self[$0..<self.endIndex] }
     }
     
+    /** Return the string with trailing whitespace stripped, or nil if empty */
     var rstrip: String? {
         return self.lastIndexNotMatching { !$0.isspace }.map { self[self.startIndex..<$0] }
     }
@@ -84,6 +89,7 @@ extension String {
         return nil
     }
     
+    /** Return the first word and the remainder of the string, if available */
     var firstWordAndRest: (String, String)? {
         guard let firstWordStartIndex = (self.firstIndexMatching { !$0.isspace})
         else { 
@@ -91,7 +97,6 @@ extension String {
         }
         let firstWordEndIndex = (self.firstIndexMatching({$0.isspace}, from:firstWordStartIndex)) ?? self.characters.endIndex
         let restStartIndex = (self.firstIndexMatching({!$0.isspace}, from:firstWordEndIndex)) ?? self.characters.endIndex
-
         return (self[firstWordStartIndex..<firstWordEndIndex], self[restStartIndex..<self.endIndex])
     }
 }
@@ -116,7 +121,6 @@ enum TemplateParseError: ErrorType, CustomStringConvertible {
 
 /* A line from the file, as read at parsing time. This is not to be confused with the internal representation of a template.t */
 enum TemplateLine: Equatable, CustomStringConvertible {
-    
     case Text(text: String)
     case TemplateStart(spec: String)
     case TemplateEnd
@@ -185,12 +189,12 @@ func ==(lhs: TemplateLine, rhs:TemplateLine) -> Bool {
     case (.IfElif(let lexp), .IfElif(let rexp)): return (lexp == rexp)
     case (.IfElse, .IfElse): return true
     case (.IfEnd, .IfEnd): return true
-
     default: return false
     }
 }
 
-/** Return a list of template elements for a line of literal text. */
+/** Return a list of template elements for a line of literal text. This will be a single .Literal, unless 
+ the text contains embedded <%= %> expressions. */
 func templateElementsForLiteralLine(line: String, filename: String, ln: Int) throws -> [TemplateElement] {
     if let openStartIndex = line.findSubstring(TokenExprOpen) {
         let openEndIndex = openStartIndex.advancedBy(TokenExprOpen.characters.count)
@@ -216,10 +220,8 @@ func templateElementsForLiteralLine(line: String, filename: String, ln: Int) thr
 func parseTemplate<G: GeneratorType where G.Element == (Int, String)>(inout input: G, filename: String) throws -> Template? {
     
     // scan forward to the TemplateStart
-    
     var l: (Int, String)? = input.next()
-    
-    while l != nil && (l!.1.lstrip?.hasPrefix("//") ?? true ) {
+    while let (_, line) = l where (line.lstrip?.hasPrefix("//") ?? true) {
         l = input.next()
     }
     guard let (ln, line) = l else { return nil }
@@ -230,30 +232,23 @@ func parseTemplate<G: GeneratorType where G.Element == (Int, String)>(inout inpu
     var elements: [TemplateElement] = []
     
     l = input.next()
-    
-    inTemplateLoop: while l != nil {
-        let (ln, line) = l!
+    inTemplateLoop: while let (ln, line) = l {
         
         if line.strip == TokenCodeOpen {
             // consume all lines until the code close token, and build a code block from them
-            var l2: (Int, String)? = input.next()
             var codelines: [String] = []
             
-            //while l2 != nil && l2!.1.strip != TokenCodeClose {
+            var l2: (Int, String)? = input.next()
             while let (_, line2) = l2 {
                 if line2.strip == TokenCodeClose { break }
-                codelines.append(l2!.1)
-                
+                codelines.append(line2)                
                 l2 = input.next()
             }
             if l2 == nil { throw TemplateParseError.UnclosedCodeBlock(filename:filename, ln:ln) }
-            
             elements.append(.Code(code:codelines.joinWithSeparator("\n")))
         } else {
-            
             // allow %% // line comments
             if !(line.textAfterEscape?.lstrip?.hasPrefix("//") ?? false) {
-        
                 let tl2 = try TemplateLine(line: line, filename:filename, ln:ln)
                 
                 switch(tl2) {
@@ -269,10 +264,8 @@ func parseTemplate<G: GeneratorType where G.Element == (Int, String)>(inout inpu
                 }
             }
         }
-        
         l = input.next()
     }
-    
     return Template(spec: spec, elements: simplifyTemplateElements(elements))
 }
 
@@ -289,4 +282,3 @@ func parseTemplates<S: SequenceType where S.Generator.Element == String>(input: 
     }
     return r
 }
-

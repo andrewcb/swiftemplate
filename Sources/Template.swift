@@ -13,7 +13,6 @@ extension String {
         var r: String = "\""
         for ch in self.characters {
             switch(ch) {
-            //case "\\": r.appendContentsOf("\\\\")
             case "\"": r.appendContentsOf("\\\"")
             case "\r": r.appendContentsOf("\\r")
             case "\n": r.appendContentsOf("\\n")
