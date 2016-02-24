@@ -78,34 +78,34 @@ class TemplateParsingTests: XCTestCase {
     
     func testTemplateLineConstruct() {
         do {
-            let tl1 = try TemplateLine(line:"Hello world")
+            let tl1 = try TemplateLine(line:"Hello world", filename:"", ln:0)
             XCTAssertEqual(tl1, TemplateLine.Text(text:"Hello world"))
 
-            let tl2 = try TemplateLine(line:" %% template foo(v1:String, v2:[Int])")
+            let tl2 = try TemplateLine(line:" %% template foo(v1:String, v2:[Int])", filename:"", ln:0)
             XCTAssertEqual(tl2, TemplateLine.TemplateStart(spec:"foo(v1:String, v2:[Int])"))
             
-            let tl2a = try TemplateLine(line:"%% endtemplate")
+            let tl2a = try TemplateLine(line:"%% endtemplate", filename:"", ln:0)
             XCTAssertEqual(tl2a, TemplateLine.TemplateEnd)
             
-            let tl3 = try TemplateLine(line:"%% for i in items")
+            let tl3 = try TemplateLine(line:"%% for i in items", filename:"", ln:0)
             XCTAssertEqual(tl3, TemplateLine.ForStart(variable:"i", iterable:"items"))
             
-            let tl4 = try TemplateLine(line:"%% endfor")
+            let tl4 = try TemplateLine(line:"%% endfor", filename:"", ln:0)
             XCTAssertEqual(tl4, TemplateLine.ForEnd)
             
-            let tl5 = try TemplateLine(line:"%% if foo==bar")
+            let tl5 = try TemplateLine(line:"%% if foo==bar", filename:"", ln:0)
             XCTAssertEqual(tl5, TemplateLine.IfStart(expression: "foo==bar"))
             
-            let tl6 = try TemplateLine(line:"%% elif foo==bar")
+            let tl6 = try TemplateLine(line:"%% elif foo==bar", filename:"", ln:0)
             XCTAssertEqual(tl6, TemplateLine.IfElif(expression: "foo==bar"))
             
-            let tl6a = try TemplateLine(line:"%% else if foo==bar")
+            let tl6a = try TemplateLine(line:"%% else if foo==bar", filename:"", ln:0)
             XCTAssertEqual(tl6a, TemplateLine.IfElif(expression: "foo==bar"))
             
-            let tl7 = try TemplateLine(line:"%% else")
+            let tl7 = try TemplateLine(line:"%% else", filename:"", ln:0)
             XCTAssertEqual(tl7, TemplateLine.IfElse)
             
-            let tl8 = try TemplateLine(line:"%% endif")
+            let tl8 = try TemplateLine(line:"%% endif", filename:"", ln:0)
             XCTAssertEqual(tl8, TemplateLine.IfEnd)
             
             
@@ -118,29 +118,29 @@ class TemplateParsingTests: XCTestCase {
     
     func testTemplateElementsForLiteralLine() {
         do {
-            let el0 = try templateElementsForLiteralLine("this is literal only")
+            let el0 = try templateElementsForLiteralLine("this is literal only", filename:"", ln:0)
             XCTAssertEqual(el0,[TemplateElement.Literal(text:"this is literal only")])
             
-            let el1 = try templateElementsForLiteralLine("foo <%= 2+3 %> bar")
+            let el1 = try templateElementsForLiteralLine("foo <%= 2+3 %> bar", filename:"", ln:0)
             XCTAssertEqual(el1,[
                 TemplateElement.Literal(text:"foo "),
                 TemplateElement.Expression(code:"2+3"),
                 TemplateElement.Literal(text:" bar")
             ])
 
-            let el2 = try templateElementsForLiteralLine("foo <%= 2+3 %>")
+            let el2 = try templateElementsForLiteralLine("foo <%= 2+3 %>", filename:"", ln:0)
             XCTAssertEqual(el2,[
                 TemplateElement.Literal(text:"foo "),
                 TemplateElement.Expression(code:"2+3")
             ])
 
-            let el3 = try templateElementsForLiteralLine("<%= 2+3 %> bar")
+            let el3 = try templateElementsForLiteralLine("<%= 2+3 %> bar", filename:"", ln:0)
             XCTAssertEqual(el3,[
                 TemplateElement.Expression(code:"2+3"),
                 TemplateElement.Literal(text:" bar")
             ])
             
-            let el4 = try templateElementsForLiteralLine("<%= 2+3 %> bar <%=items.count%><%= currentTime() %>")
+            let el4 = try templateElementsForLiteralLine("<%= 2+3 %> bar <%=items.count%><%= currentTime() %>", filename:"", ln:0)
             XCTAssertEqual(el4,[
                 TemplateElement.Expression(code:"2+3"),
                 TemplateElement.Literal(text:" bar "),
@@ -174,10 +174,12 @@ class TemplateParsingTests: XCTestCase {
             "</ul>",
             "%% endif"
         ]
+        var l: Int = 1
         var g = input.generate()
+        var g2 = anyGenerator { g.next().map{ (l++, $0) } }
         do {
             
-            if let tmpl = try parseTemplate(&g) {
+            if let tmpl = try parseTemplate(&g2, filename:"") {
                 XCTAssertEqual(tmpl.spec, "foo(items:[String])")
                 XCTAssertEqual(tmpl.elements, [
                     TemplateElement.Code(code: "let numitems = items.count\nlet sortedItems = items.sort()"),
@@ -214,7 +216,7 @@ class TemplateParsingTests: XCTestCase {
             "%% endtemplate",
         ]
         do {
-            let parsed = try parseTemplates(input)
+            let parsed = try parseTemplates(input, filename:"")
             XCTAssertEqual(parsed.count, 2)
             XCTAssertEqual(parsed[0].spec, "foo()")
             XCTAssertEqual(parsed[0].elements, [TemplateElement.Literal(text:"<p>This is a template</p>")])

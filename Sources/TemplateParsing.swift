@@ -97,19 +97,19 @@ extension String {
 }
 
 enum TemplateParseError: ErrorType, CustomStringConvertible {
-    case InvalidDirective(line: String)
-    case UnexpectedAtTopLevel(line: TemplateLine)
-    case UnexpectedInTemplate(line: TemplateLine)
-    case UnclosedExpression(line: String)
-    case UnclosedCodeBlock
+    case InvalidDirective(filename: String, ln: Int, line: String)
+    case UnexpectedAtTopLevel(filename: String, ln: Int, line: TemplateLine)
+    case UnexpectedInTemplate(filename: String, ln: Int, line: TemplateLine)
+    case UnclosedExpression(filename: String, ln: Int, line: String)
+    case UnclosedCodeBlock(filename: String, ln: Int)
     
     var description: String {
         switch(self) {
-        case InvalidDirective(let line): return "Invalid directive: \(line)"
-        case UnexpectedAtTopLevel(let line): return "Unexpected directive at top level: \(line)"
-        case UnexpectedInTemplate(let line): return "Unexpected directive in template: \(line)"
-        case UnclosedExpression(let line): return "No closing tag for expression in template: \(line)"
-        case UnclosedCodeBlock: return "No closing tag for code block in template"
+        case InvalidDirective(let fn, let ln, let line): return "\(fn):\(ln): Invalid directive: \(line)"
+        case UnexpectedAtTopLevel(let fn, let ln, let line): return "\(fn):\(ln): Unexpected at top level: \(line)"
+        case UnexpectedInTemplate(let fn, let ln, let line): return "\(fn):\(ln): Unexpected directive in template: \(line)"
+        case UnclosedExpression(let fn, let ln, let line): return "\(fn):\(ln): No closing tag for expression in template: \(line)"
+        case UnclosedCodeBlock(let fn, let ln): return "\(fn):\(ln): No closing tag for code block in template"
         }
     }
 }
@@ -127,7 +127,7 @@ enum TemplateLine: Equatable, CustomStringConvertible {
     case IfElse    
     case IfEnd
     
-    init(line: String) throws {
+    init(line: String, filename: String, ln: Int) throws {
         if let (word, rest) = line.textAfterEscape?.firstWordAndRest {
             switch(word) {
             case "if": self = IfStart(expression:rest)
@@ -145,14 +145,14 @@ enum TemplateLine: Equatable, CustomStringConvertible {
                     where inliteral == "in" {
                         self = ForStart(variable: variable, iterable: iterable)
                 } else {
-                    throw TemplateParseError.InvalidDirective(line: rest)
+                    throw TemplateParseError.InvalidDirective(filename:filename, ln:ln, line: "for \(rest)")
                 }
             case "endfor": self = ForEnd
             case "template": self = TemplateStart(spec: rest)
             case "endtemplate": self = TemplateEnd
                 
             default: 
-                throw TemplateParseError.InvalidDirective(line: rest)
+                throw TemplateParseError.InvalidDirective(filename:filename, ln:ln, line: word)
             }
         } else {
             self = Text(text:line)
@@ -191,11 +191,11 @@ func ==(lhs: TemplateLine, rhs:TemplateLine) -> Bool {
 }
 
 /** Return a list of template elements for a line of literal text. */
-func templateElementsForLiteralLine(line: String) throws -> [TemplateElement] {
+func templateElementsForLiteralLine(line: String, filename: String, ln: Int) throws -> [TemplateElement] {
     if let openStartIndex = line.findSubstring(TokenExprOpen) {
         let openEndIndex = openStartIndex.advancedBy(TokenExprOpen.characters.count)
         guard let closeStartIndex = line.findSubstring(TokenExprClose, from: openEndIndex) else {
-            throw TemplateParseError.UnclosedExpression(line: line)
+            throw TemplateParseError.UnclosedExpression(filename:filename, ln:ln, line: line)
         }
         let closeEndIndex = closeStartIndex.advancedBy(TokenExprClose.characters.count)
         
@@ -206,26 +206,26 @@ func templateElementsForLiteralLine(line: String) throws -> [TemplateElement] {
             exprText.map { TemplateElement.Expression(code: $0 ) }
         ].flatMap { $0 }
         
-        return theseElements + ((closeEndIndex<line.endIndex) ? try templateElementsForLiteralLine(line[closeEndIndex..<line.endIndex]) : [TemplateElement]())
+        return theseElements + ((closeEndIndex<line.endIndex) ? try templateElementsForLiteralLine(line[closeEndIndex..<line.endIndex], filename:filename, ln:ln) : [TemplateElement]())
         
     } else {
         return [.Literal(text:line)]
     }
 }
 
-func parseTemplate<G: GeneratorType where G.Element == String>(inout input: G) throws -> Template? {
+func parseTemplate<G: GeneratorType where G.Element == (Int, String)>(inout input: G, filename: String) throws -> Template? {
     
     // scan forward to the TemplateStart
     
-    var l: String? = input.next()
+    var l: (Int, String)? = input.next()
     
-    while l != nil && (l! == "" || l!.lstrip?.hasPrefix("//") ?? true ) {
+    while l != nil && (l!.1 == "" || l!.1.lstrip?.hasPrefix("//") ?? true ) {
         l = input.next()
     }
     if l == nil { return nil }
     
-    let tl = try TemplateLine(line: l!)
-    guard case let TemplateLine.TemplateStart(spec) = tl else { throw TemplateParseError.UnexpectedAtTopLevel(line: tl) }
+    let tl = try TemplateLine(line: l!.1, filename:filename, ln: l!.0)
+    guard case let TemplateLine.TemplateStart(spec) = tl else { throw TemplateParseError.UnexpectedAtTopLevel(filename:filename, ln:l!.0, line: tl) }
     
     var elements: [TemplateElement] = []
     
@@ -233,26 +233,27 @@ func parseTemplate<G: GeneratorType where G.Element == String>(inout input: G) t
     
     inTemplateLoop: while l != nil {
         
-        if l!.strip == TokenCodeOpen {
+        if l!.1.strip == TokenCodeOpen {
             // consume all lines until the code close token, and build a code block from them
-            var l2: String? = input.next()
+            let codeStartLine = l!.0
+            var l2: (Int, String)? = input.next()
             var codelines: [String] = []
             
-            while l2 != nil && l2!.strip != TokenCodeClose {
-                codelines.append(l2!)
+            while l2 != nil && l2!.1.strip != TokenCodeClose {
+                codelines.append(l2!.1)
                 
                 l2 = input.next()
             }
-            if l2 == nil { throw TemplateParseError.UnclosedCodeBlock }
+            if l2 == nil { throw TemplateParseError.UnclosedCodeBlock(filename:filename, ln:l!.0) }
             
             elements.append(.Code(code:codelines.joinWithSeparator("\n")))
         } else {
         
-            let tl2 = try TemplateLine(line: l!)
+            let tl2 = try TemplateLine(line: l!.1, filename:filename, ln:l!.0)
             
             switch(tl2) {
-            case .Text(let text): try elements.appendContentsOf(templateElementsForLiteralLine(text))
-            case .TemplateStart: throw TemplateParseError.UnexpectedInTemplate(line: tl2)
+            case .Text(let text): try elements.appendContentsOf(templateElementsForLiteralLine(text, filename:filename, ln:l!.0))
+            case .TemplateStart: throw TemplateParseError.UnexpectedInTemplate(filename:filename, ln:l!.0, line: tl2)
             case .TemplateEnd: break inTemplateLoop
             case .ForStart(let variable, let iterable): elements.append(.Code(code:"for \(variable) in \(iterable) {"))
             case .ForEnd: elements.append(.Code(code:"}"))
@@ -269,14 +270,16 @@ func parseTemplate<G: GeneratorType where G.Element == String>(inout input: G) t
     return Template(spec: spec, elements: simplifyTemplateElements(elements))
 }
 
-func parseTemplates<S: SequenceType where S.Generator.Element == String>(input: S) throws -> [Template] {
+func parseTemplates<S: SequenceType where S.Generator.Element == String>(input: S, filename: String) throws -> [Template] {
     var g = input.generate()
+    var line: Int = 1
     var r = [Template]()
+    var g2 = anyGenerator { g.next().map { (line++, $0) } }
     
-    var parsed = try parseTemplate(&g)
+    var parsed = try parseTemplate(&g2, filename: filename)
     while let template = parsed {
         r.append(template)
-        parsed = try parseTemplate(&g)
+        parsed = try parseTemplate(&g2, filename: filename)
     }
     return r
 }

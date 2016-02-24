@@ -44,7 +44,7 @@ func parseFile(path: String) throws -> [Template] {
     var buf = [UInt8](count: size+1, repeatedValue: 0)
     if read(fd, &buf, size)<size { throw Error(message: "Error reading \(path)") }
     if let contents = String.fromCString(UnsafePointer(buf)) {
-        return try parseTemplates(contents.characters.split("\n").map { String($0) })
+        return try parseTemplates(contents.characters.split("\n", allowEmptySlices:true).map { String($0) }, filename:path)
     } else {
         throw Error(message:"Contents of \(path) are not a valid string")
     }
