@@ -1,10 +1,7 @@
-//
-//  Template.swift
-//  swiftemplate
-//
+//  swiftemplate - a compile-time template system for Swift
+//  https://github.com/andrewcb/swiftemplate/
 //  Created by acb on 21/02/2016.
-//  Copyright © 2016 Kineticfactory. All rights reserved.
-//
+//  Licenced under the Apache Licence.
 
 import Foundation
 
