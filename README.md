@@ -37,6 +37,8 @@ Note that all content must be within a template; there may not be any content or
 
 swiftemplate directives take up one line each, and start with the characters `%%`; there may not be any other content on the line other than whitespace. The directives are:
 
+| Directives | Description |
+| --- | --- |
 | __%% template__ _name_(_args_) |  Must appear at the start of a template, and defines its name and arguments. This is directly translated to the Swift function the template compiles to. |
 | __%% endtemplate__ | Appears at the end of a template definition; optional, though if present, allows multiple templates to be defined in one file. |
 | __%% for__ _var_ __in__ _expr_ / __%% endfor__ | Iterates over an array of items (or any Swift `SequenceType`); the text between __for__ and __endfor__ directives is emitted once for each item. |
