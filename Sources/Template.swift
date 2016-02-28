@@ -34,9 +34,9 @@ enum TemplateElement : Equatable {
     
     var asCode: String {
         switch(self) {
-        case .Literal(let text): return "r.append(\(text.swiftLiteralQuoted))"
+        case .Literal(let text): return "_ℜ.append(\(text.swiftLiteralQuoted))"
         case .Code(let code): return code
-        case .Expression(let code): return "r.append(String(\(code)))"
+        case .Expression(let code): return "_ℜ.append(String(\(code)))"
         }
     }
 }
@@ -86,8 +86,8 @@ struct Template {
     
     /** Emit the Swift code for a template */
     var asCode: String {
-        let start: String = "func \(spec) -> String {\nvar r=[String]()\n"
-        let end: String = "\nreturn r.joinWithSeparator(\" \")\n}\n"
+        let start: String = "func \(spec) -> String {\nvar _ℜ=[String]()\n"
+        let end: String = "\nreturn _ℜ.joinWithSeparator(\" \")\n}\n"
         return start + (self.elements.map { $0.asCode}).joinWithSeparator("\n")  + end
     }
 }

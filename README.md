@@ -95,15 +95,16 @@ For each template, swiftemplate will generate a Swift function; this function ha
 will produce a function that (if indented nicely) would look like:
 ```
 func showContents(name: String, items: [String]) -> String {
-    var r=[String]()
-    r.append("<h1>Contents of \(name)</h1>\n<ul>")
+    var _ℜ=[String]()
+    _ℜ.append("<h1>Contents of \(name)</h1>\n<ul>")
     for item in items {
-        r.append("<li>\(item)</li>")
+        _ℜ.append("<li>\(item)</li>")
     }
-    r.append("</ul>")
-    return r.joinWithSeparator(" ")
+    _ℜ.append("</ul>")
+    return _ℜ.joinWithSeparator(" ")
 }
 ```
+(The functions internally use the variable `_ℜ` to accumulate the contents of the result; do not use this variable in your templates.)
 
 ### Attribution
 
