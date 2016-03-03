@@ -5,24 +5,6 @@
 
 import Foundation
 
-extension String {
-    var swiftLiteralQuoted: String {
-        var r: String = "\""
-        for ch in self.characters {
-            switch(ch) {
-            case "\"": r.appendContentsOf("\\\"")
-            case "\r": r.appendContentsOf("\\r")
-            case "\n": r.appendContentsOf("\\n")
-            case "\t": r.appendContentsOf("\\t")
-            case "\0": r.appendContentsOf("\\0")
-            default: r.append(ch)
-            }
-        }
-        r.append(Character("\""))
-        return r
-    }
-}
-
 /** A single element of a template; this corresponds 1-to-1 to code being emitted */
 enum TemplateElement : Equatable {
     /// A block of HTML text to emit literally
@@ -31,14 +13,6 @@ enum TemplateElement : Equatable {
     case Code(code: String)
     /// a string expression to be added to the buffer
     case Expression(code: String)
-    
-    var asCode: String {
-        switch(self) {
-        case .Literal(let text): return "_ℜ.append(\(text.swiftLiteralQuoted))"
-        case .Code(let code): return code
-        case .Expression(let code): return "_ℜ.append(String(\(code)))"
-        }
-    }
 }
 
 func ==(lhs: TemplateElement, rhs: TemplateElement) -> Bool {
@@ -84,10 +58,4 @@ struct Template {
         self.elements = elements
     }
     
-    /** Emit the Swift code for a template */
-    var asCode: String {
-        let start: String = "func \(spec) -> String {\nvar _ℜ=[String]()\n"
-        let end: String = "\nreturn _ℜ.joinWithSeparator(\" \")\n}\n"
-        return start + (self.elements.map { $0.asCode}).joinWithSeparator("\n")  + end
-    }
 }
