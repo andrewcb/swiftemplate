@@ -25,6 +25,8 @@ while let arg = arggen.next() {
     }
 }
 
+let options = CodeGenerationOptions()
+
 struct Error: ErrorType, CustomStringConvertible {
     let message: String
     var description:String { return message }
@@ -58,7 +60,7 @@ if infiles.isEmpty {
         }
         defer { close(outfd) }
         for template in templates {
-            let code = template.asCode
+            let code = template.asCode(options)
             let bytes = [UInt8](code.utf8)
             
             let written = write(outfd, UnsafePointer(bytes), bytes.count)

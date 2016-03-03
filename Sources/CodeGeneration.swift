@@ -5,6 +5,10 @@
 
 import Foundation
 
+struct CodeGenerationOptions {
+    let htmlQuoteExpressions: Bool = true
+}
+
 extension String {
     var swiftLiteralQuoted: String {
         var r: String = "\""
@@ -24,7 +28,7 @@ extension String {
 }
 
 extension TemplateElement {
-    var asCode: String {
+    func asCode(options: CodeGenerationOptions) -> String {
         switch(self) {
         case .Literal(let text): return "_ℜ.append(\(text.swiftLiteralQuoted))"
         case .Code(let code): return code
@@ -35,9 +39,9 @@ extension TemplateElement {
 
 extension Template {
     /** Emit the Swift code for a template */
-    var asCode: String {
+    func asCode(options: CodeGenerationOptions) -> String {
         let start: String = "func \(spec) -> String {\nvar _ℜ=[String]()\n"
         let end: String = "\nreturn _ℜ.joinWithSeparator(\" \")\n}\n"
-        return start + (self.elements.map { $0.asCode}).joinWithSeparator("\n")  + end
+        return start + (self.elements.map { $0.asCode(options)}).joinWithSeparator("\n")  + end
     }
 }
