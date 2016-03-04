@@ -119,31 +119,44 @@ class TemplateParsingTests: XCTestCase {
             let el0 = try templateElementsForLiteralLine("this is literal only", filename:"", ln:0)
             XCTAssertEqual(el0,[TemplateElement.Literal(text:"this is literal only")])
             
-            let el1 = try templateElementsForLiteralLine("foo <%= 2+3 %> bar", filename:"", ln:0)
-            XCTAssertEqual(el1,[
+            let el1f = try templateElementsForLiteralLine("foo <%= 2+3 %> bar", filename:"", ln:0)
+            XCTAssertEqual(el1f,[
                 TemplateElement.Literal(text:"foo "),
-                TemplateElement.Expression(code:"2+3"),
+                TemplateElement.Expression(code:"2+3", unfiltered:false),
                 TemplateElement.Literal(text:" bar")
             ])
 
-            let el2 = try templateElementsForLiteralLine("foo <%= 2+3 %>", filename:"", ln:0)
-            XCTAssertEqual(el2,[
+            let el1u = try templateElementsForLiteralLine("foo <%=! 2+3 %> bar", filename:"", ln:0)
+            XCTAssertEqual(el1u,[
                 TemplateElement.Literal(text:"foo "),
-                TemplateElement.Expression(code:"2+3")
+                TemplateElement.Expression(code:"2+3", unfiltered:true),
+                TemplateElement.Literal(text:" bar")
+                ])
+            
+            let el2f = try templateElementsForLiteralLine("foo <%= 2+3 %>", filename:"", ln:0)
+            XCTAssertEqual(el2f,[
+                TemplateElement.Literal(text:"foo "),
+                TemplateElement.Expression(code:"2+3", unfiltered:false)
             ])
 
+            let el2u = try templateElementsForLiteralLine("foo <%=! 2+3 %>", filename:"", ln:0)
+            XCTAssertEqual(el2u,[
+                TemplateElement.Literal(text:"foo "),
+                TemplateElement.Expression(code:"2+3", unfiltered:true)
+                ])
+            
             let el3 = try templateElementsForLiteralLine("<%= 2+3 %> bar", filename:"", ln:0)
             XCTAssertEqual(el3,[
-                TemplateElement.Expression(code:"2+3"),
+                TemplateElement.Expression(code:"2+3", unfiltered:false),
                 TemplateElement.Literal(text:" bar")
             ])
             
-            let el4 = try templateElementsForLiteralLine("<%= 2+3 %> bar <%=items.count%><%= currentTime() %>", filename:"", ln:0)
+            let el4 = try templateElementsForLiteralLine("<%= 2+3 %> bar <%=!items.count%><%= currentTime() %>", filename:"", ln:0)
             XCTAssertEqual(el4,[
-                TemplateElement.Expression(code:"2+3"),
+                TemplateElement.Expression(code:"2+3", unfiltered:false),
                 TemplateElement.Literal(text:" bar "),
-                TemplateElement.Expression(code:"items.count"),
-                TemplateElement.Expression(code:"currentTime()")
+                TemplateElement.Expression(code:"items.count", unfiltered:true),
+                TemplateElement.Expression(code:"currentTime()", unfiltered:false)
                 ])
         } catch {
             XCTFail("error thrown")
@@ -189,7 +202,7 @@ class TemplateParsingTests: XCTestCase {
                     TemplateElement.Literal(text:"<p>There are no items</p>"),
                     TemplateElement.Code(code: "} else {"),
                     TemplateElement.Literal(text: "<p>There are "),
-                    TemplateElement.Expression(code: "items.count"),
+                    TemplateElement.Expression(code: "items.count", unfiltered:false),
                     TemplateElement.Literal(text: " items</p>\n<ul>"),
                     TemplateElement.Code(code: "for item in items {"),
                     TemplateElement.Literal(text: "<li>\\"+"(item)</li>"),

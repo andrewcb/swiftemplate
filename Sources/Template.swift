@@ -12,7 +12,7 @@ enum TemplateElement : Equatable {
     /// a block of Swift code
     case Code(code: String)
     /// a string expression to be added to the buffer
-    case Expression(code: String)
+    case Expression(code: String, unfiltered: Bool)
 }
 
 func ==(lhs: TemplateElement, rhs: TemplateElement) -> Bool {

@@ -191,20 +191,22 @@ func ==(lhs: TemplateLine, rhs:TemplateLine) -> Bool {
 }
 
 /** Return a list of template elements for a line of literal text. This will be a single .Literal, unless 
- the text contains embedded <%= %> expressions. */
+ the text contains embedded <%= %> / <%=! %> expressions. */
 func templateElementsForLiteralLine(line: String, filename: String, ln: Int) throws -> [TemplateElement] {
     if let openStartIndex = line.findSubstring(TokenExprOpen) {
         let openEndIndex = openStartIndex.advancedBy(TokenExprOpen.characters.count)
-        guard let closeStartIndex = line.findSubstring(TokenExprClose, from: openEndIndex) else {
+        let exprUnfiltered = (line.characters[openEndIndex] == "!")
+        let exprStartIndex = exprUnfiltered ? openEndIndex.successor() : openEndIndex
+        guard let closeStartIndex = line.findSubstring(TokenExprClose, from: exprStartIndex) else {
             throw TemplateParseError.UnclosedExpression(filename:filename, ln:ln, line: line)
         }
         let closeEndIndex = closeStartIndex.advancedBy(TokenExprClose.characters.count)
         
         let initialText:String? = (openStartIndex > line.startIndex) ? line[line.startIndex..<openStartIndex] : nil
-        let exprText = (openEndIndex < closeStartIndex) ? line[openEndIndex..<closeStartIndex].strip : nil
+        let exprText = (exprStartIndex < closeStartIndex) ? line[exprStartIndex..<closeStartIndex].strip : nil
         let theseElements: [TemplateElement] = [
             initialText.map { TemplateElement.Literal(text: $0) }, 
-            exprText.map { TemplateElement.Expression(code: $0 ) }
+            exprText.map { TemplateElement.Expression(code: $0, unfiltered: exprUnfiltered ) }
         ].flatMap { $0 }
         
         return theseElements + ((closeEndIndex<line.endIndex) ? try templateElementsForLiteralLine(line[closeEndIndex..<line.endIndex], filename:filename, ln:ln) : [TemplateElement]())

@@ -6,7 +6,11 @@
 import Foundation
 
 struct CodeGenerationOptions {
-    let htmlQuoteExpressions: Bool = true
+    let htmlQuoteExpressions: Bool
+    
+    init(htmlQuoteExpressions: Bool = true) {
+        self.htmlQuoteExpressions = htmlQuoteExpressions
+    }
 }
 
 extension String {
@@ -32,7 +36,9 @@ extension TemplateElement {
         switch(self) {
         case .Literal(let text): return "_ℜ.append(\(text.swiftLiteralQuoted))"
         case .Code(let code): return code
-        case .Expression(let code): return "_ℜ.append(String(\(code)))"
+        case .Expression(let code, let unfiltered): 
+            let quoteOp = ((options.htmlQuoteExpressions && !unfiltered) ? ".HTMLQuote" : "")
+            return "_ℜ.append(String(\(code))\(quoteOp))"
         }
     }
 }
