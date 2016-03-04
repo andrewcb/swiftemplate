@@ -19,7 +19,7 @@ func ==(lhs: TemplateElement, rhs: TemplateElement) -> Bool {
     switch((lhs, rhs)) {
     case (.Literal(let ltext), .Literal(let rtext)): return ltext == rtext
     case (.Code(let lcode), .Code(let rcode)): return lcode == rcode
-    case (.Expression(let lcode), .Expression(let rcode)): return lcode == rcode
+    case (.Expression(let lcode, let lunf), .Expression(let rcode, let runf)): return (lcode == rcode) && (lunf == runf)
     default: return false
     }
 }

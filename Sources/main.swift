@@ -17,15 +17,17 @@ let execName = arggen.next()
 
 var infiles = [String]()
 var outputName: String?
+var htmlQuoteExpressions = true
 
 while let arg = arggen.next() {
     switch(arg) {
     case "-o": outputName = arggen.next()
+    case "--no-htmlquote": htmlQuoteExpressions = false
     default: infiles.append(arg)
     }
 }
 
-let options = CodeGenerationOptions()
+let options = CodeGenerationOptions(htmlQuoteExpressions:htmlQuoteExpressions)
 
 struct Error: ErrorType, CustomStringConvertible {
     let message: String
@@ -49,7 +51,7 @@ func parseFile(path: String) throws -> [Template] {
 }
 
 if infiles.isEmpty {
-    print("usage: \(execName) [-o output] input ...")
+    print("usage: \(execName) [-o output] [--no-htmlquote] input ...")
 } else {
     do {
         let templates = try infiles.flatMap(parseFile)
