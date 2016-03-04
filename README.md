@@ -4,7 +4,7 @@ __swiftemplate__ is a templating system which compiles to Swift code, and also a
 
 ## The template syntax
 
-swiftemplate templates are just text files containing content (typically HTML), with additional directives to define templates and allow for iteration and optional sections, as well as inline expressions and Swift code blocks.  An example template is below:
+Swiftemplate templates are just text files containing content (typically HTML), with additional directives to define templates and allow for iteration and optional sections, as well as inline expressions and Swift code blocks.  An example template is below:
 
 ```
 %% template listItems(name: String, items: [String])
@@ -22,7 +22,7 @@ let numItems = items.count
   <p>There are \(numItems) items</p>
   <ul>
   %% for item in items
-    <li>\(item)</li>
+    <li><%= item %></li>
   %% endfor
   </ul>
 %% endif
@@ -35,7 +35,7 @@ Note that all content must be within a template; there may not be any content or
 
 ### Directives
 
-swiftemplate directives take up one line each, and start with the characters `%%`; there may not be any other content on the line other than whitespace. The directives are:
+Swiftemplate directives take up one line each, and start with the characters `%%`; there may not be any other content on the line other than whitespace. The directives are:
 
 | Directives | Description |
 | --- | --- |
@@ -46,9 +46,11 @@ swiftemplate directives take up one line each, and start with the characters `%%
 
 ### Inline expressions
 
-You can include the result of any Swift expression in HTML code by wrapping it in `<%=` and `%>`. Expressions must be on the same line. 
+You can include the result of any Swift expression in the output by wrapping it in `<%=` (or `<%=!` and `%>`. Expressions must be on the same line. By default, the template code generated for expressions wrapped in `<%= %>` will apply a transformation to the expression result, replacing HTML special characters with quoted versions (i.e., converting `<` and `>` to `&lt;` and `&gt;`); if you wish to insert the expression's result directly into the output without quoting (i.e., to allow HTML tags to be treated as such), start the expression with `<%=!` (note the exclamation point). HTML quoting can also be turned off globally by running the `swiftemplate` preprocessor with the `--no-htmlquote` command-line option. _Note that, for reasons of security, it is strongly recommended that any user-generated input displayed in a HTML template be HTML quoted._  
 
-You can also use Swift's string interpolation (i.e., `\(expr)`), though this is restricted by Swift's syntax (for example, quotes are not permitted); if you wish to include more complex expressions in your templates, the `<%= %>` syntax is preferable.
+You can also use Swift's string interpolation (i.e., `\(expr)`), though this does no HTML quoting, and is restricted by Swift's syntax (for example, quotes are not permitted); if you wish to include more complex expressions in your templates, the `<%= %>` syntax is preferable.
+
+HTML quoting uses an extension to `String` which adds a `.HTMLQuote` property. If your template uses HTML quoting, you will probably need to add the provided `String+HTMLQuote.swift` source file (in the `Runtime` directory of the Swiftemplate distribution) to the project using your compiled templates. See the ‘Runtime dependencies’ section below for more details.
 
 ### Code blocks
 
@@ -77,6 +79,10 @@ or, to convert all templates in a directory to one Swift source file:
 swiftemplate -o templates.swift Templates/*.template
 ```
 
+Other optional arguments accepted by the `swiftemplate` command are:
+
+* `--no-htmlquote` Do not quote HTML characters in inline expressions. Code generated with this switch will not require the `String+HTMLQuote.swift` extension to be present; this is probably not recommended if you're generating HTML and there may be any unsanitised user input passed to templates.
+
 ## The generated code
 
 For each template, swiftemplate will generate a Swift function; this function has the name and takes the arguments specified in the `%% template` header and returns a `String` containing the formatted output of the template. For example, the following template:
@@ -86,7 +92,7 @@ For each template, swiftemplate will generate a Swift function; this function ha
 <h1>Contents of \(name)</h1>
 <ul>
 %% for item in items
-  <li>\(item)</li>
+  <li><%= item %></li>
 %% endfor
 </ul>
 %% endtemplate
@@ -98,7 +104,9 @@ func showContents(name: String, items: [String]) -> String {
     var _ℜ=[String]()
     _ℜ.append("<h1>Contents of \(name)</h1>\n<ul>")
     for item in items {
-        _ℜ.append("<li>\(item)</li>")
+        _ℜ.append("<li>")
+        _ℜ.append(String(item).HTMLQuote)
+        _ℜ.append("</li>")
     }
     _ℜ.append("</ul>")
     return _ℜ.joinWithSeparator(" ")
@@ -106,6 +114,10 @@ func showContents(name: String, items: [String]) -> String {
 ```
 (The functions internally use the variable `_ℜ` to accumulate the contents of the result; do not use this variable in your templates.)
 
+### Runtime dependencies
+
+If your template uses HTML quoting, you will need to add the `String+HTMLQuote.swift` source file (in the `Runtime` directory of the Swiftemplate distribution) to your code. (If you are using the templates in a [Malimbe](https://github.com/andrewcb/malimbe/) application, you can skip this step, as Malimbe includes the string extension.)
+
 ### Attribution
 
-swiftemplate was written by Andrew Bulhak, and is licenced under the Apache Licence.
+Swiftemplate was written by Andrew Bulhak, and is licenced under the Apache Licence.
